@@ -1,29 +1,63 @@
 import './App.css';
 import Die from './components/Die'
 import {useState} from 'react'
+import { nanoid } from 'nanoid'
+
 
 function App() {
   const [diceArray, setDiceArray] = useState(generateRandArr());
 
   function generateRandArr() {
-    const randArr = [];
+    const diceArr = [];
     for (let i = 0; i <= 9; i++) {
-      randArr.push(Math.ceil(Math.random() * 6))
+      diceArr.push({
+        value: Math.ceil(Math.random() * 6),
+        isHeld: false,
+        id: nanoid(),
+      });
     }
-    return randArr;
+    return diceArr;
   }
-  const dice = diceArray.map(el => {
-    return (
-      <Die key={Math.random()} value={el} />
-    )
-  })
 
-  console.log(generateRandArr())
+  function rollDice() {
+    setDiceArray(generateRandArr());
+  }
+
+  function holdDice(id) {
+    setDiceArray(prevArray => {
+      //find index of clicked dice
+      const i = prevArray.findIndex(obj => obj.id === id);
+      //return spread of spliced prevArray before and after clicked dice, changing clicked dice's isHeld value
+      return [
+        ...prevArray.slice(0, i),
+        {
+          value: prevArray[i].value,
+          isHeld: !prevArray[i].isHeld,
+          id: id
+        },
+        ...prevArray.slice(i + 1)
+      ];
+
+    })
+  }
+
+  const dice = diceArray.map(diceObj => {
+    return (
+      <Die 
+        value={diceObj.value} 
+        isHeld={diceObj.isHeld} 
+        key={diceObj.id} 
+        handleClick={() => holdDice(diceObj.id)}
+      />
+    )
+  });
+
   return (
    <main>
     <div className='dice-container'>
       {dice}
     </div>
+    <button className='roll-dice' onClick={rollDice} >Roll</button>
    </main>
   );
 }

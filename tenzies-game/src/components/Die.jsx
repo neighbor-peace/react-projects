@@ -1,9 +1,11 @@
 import React from "react";
 
-const Die = ({value}) => {
-  
+const Die = ({value, isHeld, handleClick}) => {
   return (
-    <div className="die-face">
+    <div 
+      className={isHeld ? "die-face held" : "die-face"}
+      onClick={handleClick}
+    >
       <h2 className="die-number">{value}</h2>
     </div>
   );
