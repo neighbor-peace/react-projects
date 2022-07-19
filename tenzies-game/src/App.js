@@ -1,11 +1,20 @@
 import './App.css';
 import Die from './components/Die'
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import { nanoid } from 'nanoid'
+import Confetti from 'react-confetti'
 
 
 function App() {
   const [diceArray, setDiceArray] = useState(generateRandArr());
+  const [tenzies, setTenzies] = useState(false);
+
+  useEffect(() => {
+    const value = diceArray[0].value;
+    if (diceArray.every(obj => obj.isHeld && obj.value === value)) {
+      setTenzies(true);
+    }
+  }, [diceArray]);
 
   function generateRandArr() {
     const diceArr = [];
@@ -20,25 +29,27 @@ function App() {
   }
 
   function rollDice() {
-    setDiceArray(generateRandArr());
+    setDiceArray(prevArray => prevArray.map(obj => {
+        return obj.isHeld ? obj : 
+          {...obj, value: Math.ceil(Math.random() * 6)}
+      })
+    );
   }
 
   function holdDice(id) {
     setDiceArray(prevArray => {
-      //find index of clicked dice
-      const i = prevArray.findIndex(obj => obj.id === id);
-      //return spread of spliced prevArray before and after clicked dice, changing clicked dice's isHeld value
-      return [
-        ...prevArray.slice(0, i),
-        {
-          value: prevArray[i].value,
-          isHeld: !prevArray[i].isHeld,
-          id: id
-        },
-        ...prevArray.slice(i + 1)
-      ];
-
+      return prevArray.map(obj => {
+        return obj.id !== id ? obj : {
+          ...obj,
+          isHeld: !obj.isHeld,
+        }
+      })
     })
+  }
+
+  function newGame() {
+    setDiceArray(generateRandArr());
+    setTenzies(false);
   }
 
   const dice = diceArray.map(diceObj => {
@@ -54,10 +65,18 @@ function App() {
 
   return (
    <main>
+    {tenzies && <Confetti />}
+    <h1 className="title">Tenzies</h1>
+      <p className="instructions">{
+        tenzies ? 'You Win!' :
+        `Roll until all dice are the same. Click each die to freeze it at its current value between rolls.`
+      }</p>
     <div className='dice-container'>
       {dice}
     </div>
-    <button className='roll-dice' onClick={rollDice} >Roll</button>
+    <button className='roll-dice' onClick={tenzies ? newGame : rollDice} >
+      {tenzies ? 'New Game' : 'Roll'}
+    </button>
    </main>
   );
 }
